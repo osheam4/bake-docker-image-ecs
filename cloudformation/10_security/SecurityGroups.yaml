@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: dc4 security stack
+
+Parameters:
+  Project:
+    Type: String
+  ProjectLower:
+    Type: String
+  Environment:
+    Type: String
+  EnvironmentLower:
+    Type: String
+  AccountVpc:
+    Type: String
+  VpcCidr:
+    Type: String
+
+Resources:
+  MyWebServerALBSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: MyWebServer ALB Security Group
+      VpcId: !Ref AccountVpc
+      Tags:
+      - Key: Name
+        Value: MyWebServerALBSG
+      SecurityGroupIngress:
+      - IpProtocol: "tcp"
+        FromPort: 80
+        ToPort: 80
+        CidrIp: '0.0.0.0/0'

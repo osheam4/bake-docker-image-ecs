@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Nested Stacks parent stack
+
+Parameters:
+  Project:
+    Type: String
+  Environment:
+    Type: String
+  ProjectLower:
+    Type: String
+  EnvironmentLower:
+    Type: String
+
+Resources:
+  SecurityStack:
+    Properties:
+      Parameters:
+        Project: !Ref 'Project'
+        ProjectLower: !Ref ProjectLower
+        Environment: !Ref 'Environment'
+        EnvironmentLower: !Ref 'EnvironmentLower'
+        AccountVpc:
+          'Fn::ImportValue': 'AccountVpc'
+        VpcCidr:
+          'Fn::ImportValue': 'VpcCidr'
+        AEMAuthorIP: !Ref AEMAuthorIP
+      TemplateURL: !Sub '${S3ResourcesBucket}/${ProjectLower}/10_security/SecurityGroups.yaml'
+      TimeoutInMinutes: 90
+    Type: AWS::CloudFormation::Stack
