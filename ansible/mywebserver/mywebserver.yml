@@ -7,4 +7,10 @@
 
 - name: Create ECR
   cloudformation:
-    stack_name: 'FR-{{ env }}-{{ project }}-ECR'
+    stack_name: 'FR-{{ env }}-{{ project }}'
+    region: "{{ common_vars.region }}"
+    template: "cloudformation/{{ project }}/{{ project }}.yaml"
+    template_parameters:
+      DeploymentsBucket: "https://{{ env }}-{{ project }}-deployments.s3-{{ common_vars.region }}.amazonaws.com"
+      AccountEnv: "{{ account_env }}"
+  register: ecr_stack
