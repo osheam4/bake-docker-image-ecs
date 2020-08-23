@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ECSCluster stack
+
+Parameters:
+  Project:
+    Type: String
+  ProjectLower:
+    Type: String
+  Environment:
+    Type: String
+  EnvironmentLower:
+    Type: String
+
+Resources:
+  MyWebECRepository:
+    Properties:
+      RepositoryName: !Join ['-', [!Ref ProjectLower, !Ref EnvironmentLower, 'ecr']]
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+            {
+              "rulePriority": 1,
+              "description": "Only keep 2 images",
+              "selection": {
+                "tagStatus": "untagged",
+                "countType": "imageCountMoreThan",
+                "countNumber": 2
+              },
+              "action": { "type": "expire" }
+            }]
+          }
+    Type: AWS::ECR::Repository
+  
+  MyWebECSCluster:
+    Properties:
+      ClusterName: !Join ['-', [!Ref Project, !Ref Environment, 'ECS-CLUSTER']]
+    Type: AWS::ECS::Cluster
+
+Outputs:
+  MyWebECRepository:
+    Description: MyWeb ECS Repository
+    Value: !Ref 'MyWebECRepository'
+  MyWebECSCluster:
+    Description: MyWeb ECS Cluster
+    Value: !Ref 'MyWebECSCluster'
+    Export:
+      Name: !Sub '${Project}-${Environment}-ECS-Cluster'

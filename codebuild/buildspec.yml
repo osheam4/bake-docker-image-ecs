@@ -1,0 +1,23 @@
+version: 0.2
+
+env:
+  variables:
+    PROJECT: bake-docker-image-ecs
+    REGION: eu-west-1
+
+phases:
+  install:
+    commands:
+      - echo checking virtualenv
+      - virtualenv .ansible
+      - echo "pip install requirements"
+      - source .ansible/bin/activate . && pip install -r requirements.txt
+
+  pre_build:
+    commands:
+      - echo check login to ECR
+      - $(aws ecr get-login --no-include-email --region ${REGION})
+ 
+  build:
+    commands:
+      - source .ansible/bin/activate . && bash codebuild/deploy.sh
