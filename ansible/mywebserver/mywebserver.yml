@@ -73,17 +73,17 @@
 
 
 
-# - name: Remove Local image Version
-#   docker_image:
-#     state: absent
-#     name: '{{ project }}'
-#     tag: '{{ env_vars.version }}'
+- name: Remove Local image Version
+  docker_image:
+    state: absent
+    name: '{{ project }}'
+    tag: '{{ env_vars.version }}'
 
-# - name: Remove local image Latest
-#   docker_image:
-#     state: absent
-#     name: '{{ project }}:{{ env_vars.version }}'
-#     tag: latest
+- name: Remove local image Latest
+  docker_image:
+    state: absent
+    name: '{{ project }}:{{ env_vars.version }}'
+    tag: latest
 
 # - name: Remove Local image Version
 #   docker_image:
