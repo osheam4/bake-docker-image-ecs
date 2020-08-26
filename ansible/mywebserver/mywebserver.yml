@@ -4,13 +4,99 @@
   set_fact:
     parent_stack_name: 'FR-{{ env }}-{{ project }}'
 
-
 - name: Create ECR
   cloudformation:
     stack_name: 'FR-{{ env }}-{{ project }}'
-    region: "{{ common_vars.region }}"
-    template: "cloudformation/{{ project }}/{{ project }}.yaml"
+    region: "{{ aws_region }}"
+    template: "cloudformation/05_ecs/{{ project }}.yaml"
     template_parameters:
-      DeploymentsBucket: "https://{{ env }}-{{ project }}-deployments.s3-{{ common_vars.region }}.amazonaws.com"
-      AccountEnv: "{{ account_env }}"
+      Project: '{{ project|upper }}'
+      ProjectLower: '{{ project|lower }}'
+      Environment: '{{ env|lower }}'
+      EnvironmentLower: '{{ env|upper }}'
   register: ecr_stack
+
+- name: Get AWS account Number
+  shell:
+    cmd: echo $(aws sts get-caller-identity --query Account --output text)
+  register: account_command_output
+
+- name: Set Account Number Number - needed for ECR push
+  set_fact:
+    aws_account: "{{ account_command_output.stdout }}"
+
+- name: pip install docker for ansible
+  shell:
+    cmd: pip install docker
+
+- name: save dockerfile
+  shell: |
+    echo 'FROM centos:latest
+    MAINTAINER {{ project }}
+    RUN yum -y install httpd
+    COPY index.html /var/www/html/
+    CMD [“/usr/sbin/httpd”, “-D”, “FOREGROUND”]
+    EXPOSE 80
+    ' >> Dockerfile
+
+- name: save index.html
+  shell: |
+    echo 'Hello {{ project }}
+    ' >> index.html
+
+- name: Build the image from Dockerfile
+  docker_image:
+    name: '{{ project }}:{{ env_vars.version }}'
+    build:
+      path: ./
+      pull: yes
+    source: build
+    force_source: yes
+
+- name: Add tag version to image
+  docker_image:
+    name: '{{ project }}:{{ env_vars.version }}'
+    repository: '{{ project }}:latest'
+    force_tag: yes
+    source: local
+
+# - name: Push Version Number to ECR
+#   docker_image:
+#     name: '{{ project }}:{{ env_vars.version }}'
+#     source: local
+#     repository: '{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project|lower }}-{{ env|lower }}-ecr'
+#     push: yes
+
+# - name: Push Latest to ECR
+#   docker_image:
+#     name: '{{ project }}'
+#     source: local
+#     repository: '{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project|lower }}-{{ env|lower }}-ecr'
+#     push: yes
+
+
+
+# - name: Remove Local image Version
+#   docker_image:
+#     state: absent
+#     name: '{{ project }}'
+#     tag: '{{ env_vars.version }}'
+
+# - name: Remove local image Latest
+#   docker_image:
+#     state: absent
+#     name: '{{ project }}:{{ env_vars.version }}'
+#     tag: latest
+
+# - name: Remove Local image Version
+#   docker_image:
+#     state: absent
+#     name: '{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project|lower }}-{{ env|lower }}-ecr'
+#     tag: '{{ env_vars.version }}'
+
+# - name: Remove local image Latest
+#   docker_image:
+#     state: absent
+#     name: '{{ aws_account }}.dkr.ecr.{{ aws_region }}.amazonaws.com/{{ project|lower }}-{{ env|lower }}-ecr'
+#     tag: latest
+
