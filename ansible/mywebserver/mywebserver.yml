@@ -1,12 +1,9 @@
 ---
 
-- name: Creating parent stack name
-  set_fact:
-    parent_stack_name: 'FR-{{ env }}-{{ project }}'
 
 - name: Create ECR
   cloudformation:
-    stack_name: 'FR-{{ env }}-{{ project }}'
+    stack_name: '{{ env }}-{{ project }}'
     region: "{{ aws_region }}"
     template: "cloudformation/05_ecs/{{ project }}.yaml"
     template_parameters:
